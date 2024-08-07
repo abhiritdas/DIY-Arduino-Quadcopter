@@ -2,9 +2,14 @@
 #include <WebServer.h>
 #include <WiFi.h>
 
-// Your Wi-Fi credentials
+// Wi-Fi credentials
 const char* ssid = "ESP32_Quadcopter";
-const char* password = "1234";
+const char* password = "12345678";
+
+// Network settings
+IPAddress local_IP(192, 168, 1, 100);  // Static IP address
+IPAddress gateway(192, 168, 1, 1);     // Gateway address (commonly the router IP)
+IPAddress subnet(255, 255, 255, 0);    // Subnet mask
 
 //TUNE THESE PID VALUES FOR FLIGHT
 float PRateRoll = 0.75; //For outdoor flights, keep this gain to 0.75 and for indoor flights keep the gain to be 0.6
@@ -23,14 +28,24 @@ float DRateYaw = 0;
 WebServer server(80);
 
 void setupWiFi() {
-    WiFi.begin(ssid, password);
-    while (WiFi.status() != WL_CONNECTED) {
-        delay(1000);
-        Serial.println("Connecting to WiFi...");
+    Serial.begin(115200);
+
+    Serial.println("Configuring WiFi Access Point (AP)");
+    if (!WiFi.softAPConfig(local_IP, gateway, subnet)) {
+        Serial.println("AP Config Failed");
     }
-    Serial.println("Connected to WiFi");
+    Serial.println(" ");
+    Serial.print("AP Launch Status: ");
+    Serial.println(WiFi.softAP(ssid, password) ? "Ready" : "Failed");
+
+    Serial.println(" ");
+    Serial.print("Connect to IP Address: ");
+    Serial.println(WiFi.softAPIP());
+
+    setupWebServer();
 }
 
+//  accessed continuously by main loop
 void checkWiFiConnection() {
     if (WiFi.status() != WL_CONNECTED) {
         Serial.println("WiFi disconnected, reconnecting...");

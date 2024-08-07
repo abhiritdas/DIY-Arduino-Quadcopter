@@ -273,7 +273,10 @@ void reset_pid(void)
 
 void setup(void) {
 
+  //initiate Serial, Web Server, and LED 
   Serial.begin(115200);
+  pinMode(2, OUTPUT);
+  setupWiFi();      //  ENABLE WIFI ACCESSPOINT & WEB SERVER
 
   for(int i=0; i<10; i++) {
       digitalWrite(2, LOW);
@@ -281,9 +284,6 @@ void setup(void) {
       digitalWrite(2, HIGH);
       delay(100);
   }
-
-  setupWiFi();      //  ENABLE WIFI ACCESSPOINT
-  setupWebServer();
 
   pinMode(channel_1_pin, INPUT_PULLUP);
   pinMode(channel_2_pin, INPUT_PULLUP);
@@ -311,7 +311,7 @@ void setup(void) {
   mot2.attach(mot2_pin,1000,2000);
   mot3.attach(mot3_pin,1000,2000);
   mot4.attach(mot4_pin,1000,2000);
-  //to stop esc from beeping
+  //to stop escs from beeping
   mot1.write(0);
   mot2.write(0);
   mot3.write(0);
@@ -348,15 +348,14 @@ void setup(void) {
 }
 
 
-
 void loop(void) {
 
-  //CHECK FOR CONTINUOUS CONNECTION
-    checkWiFiConnection();
+  //keep variables up to date with webapp parameters
+    //checkWiFiConnection();
     server.handleClient();
 
   //Abhirit:
-  //check for armswitch enable (channel 5)
+  //check for kill switch enable (channel 5)
   while(ReceiverValue[4] > 1500) {
     mot1.write(map(0, 1000, 2000, 0, 180));
     mot2.write(map(0, 1000, 2000, 0, 180));
@@ -552,17 +551,17 @@ void loop(void) {
 
 
 //PID constants
-  Serial.print("PRateRoll: ");
-  Serial.print(PRateRoll);
-  Serial.println(" ");
-  Serial.print("IRateRoll: ");
-  Serial.print(IRateRoll);
-  Serial.print(" ");
-  Serial.print("DRateRoll: ");
-  Serial.print(DRateRoll);
-  Serial.print(" ");
+//   Serial.print("PRateRoll: ");
+//   Serial.print(PRateRoll);
+//   Serial.println(" ");
+//   Serial.print("IRateRoll: ");
+//   Serial.print(IRateRoll);
+//   Serial.print(" ");
+//   Serial.print("DRateRoll: ");
+//   Serial.print(DRateRoll);
+//   Serial.print(" ");
   
-  Serial.println(" ");
+//   Serial.println(" ");
 
 
  
