@@ -1,3 +1,9 @@
+/*
+    Last Updated: 08/09/2024
+    This file pairs with pid_tuning.cpp
+    OPEN "192.168.1.100" IN BROWSER TO OPEN PID TUNING WEBPAGE
+*/
+
 #include "WiFiHandler.h"
 #include <WebServer.h>
 #include <WiFi.h>
@@ -8,7 +14,7 @@ const char* password = "12345678";
 
 // Network settings
 IPAddress local_IP(192, 168, 1, 100);  // Static IP address
-IPAddress gateway(192, 168, 1, 1);     // Gateway address (commonly the router IP)
+IPAddress gateway(192, 168, 1, 1);     // Gateway address (usually the router IP)
 IPAddress subnet(255, 255, 255, 0);    // Subnet mask
 
 //TUNE THESE PID VALUES FOR FLIGHT

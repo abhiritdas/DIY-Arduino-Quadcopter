@@ -1,3 +1,9 @@
+/*
+  Last Updated: 08/09/2024
+  This file pairs with WiFiHandler.cpp
+  OPEN "192.168.1.100" IN BROWSER TO OPEN PID TUNING WEBPAGE
+*/
+
 #include <Wire.h>
 #include <ESP32Servo.h>
 #include "WiFiHandler.h"
@@ -10,10 +16,10 @@ Servo mot1;
 Servo mot2;
 Servo mot3;
 Servo mot4;
-const int mot1_pin = 27;  //13
-const int mot2_pin = 14;  //12
-const int mot3_pin = 12;  //14
-const int mot4_pin = 13;  //27
+const int mot1_pin = 14;  //top right
+const int mot2_pin = 13;  //rear right
+const int mot3_pin = 12;  //rear left
+const int mot4_pin = 27;  //top left
 
 volatile uint32_t current_time;
 volatile uint32_t last_channel_1 = 0;
@@ -351,8 +357,10 @@ void setup(void) {
 void loop(void) {
 
   //keep variables up to date with webapp parameters
-    //checkWiFiConnection();
     server.handleClient();
+
+  //flipping direction of pitch
+  // AnglePitch = -AnglePitch;
 
   //Abhirit:
   //check for kill switch enable (channel 5)
@@ -551,23 +559,23 @@ void loop(void) {
 
 
 //PID constants
-//   Serial.print("PRateRoll: ");
-//   Serial.print(PRateRoll);
-//   Serial.println(" ");
-//   Serial.print("IRateRoll: ");
-//   Serial.print(IRateRoll);
-//   Serial.print(" ");
-//   Serial.print("DRateRoll: ");
-//   Serial.print(DRateRoll);
-//   Serial.print(" ");
+  // Serial.print("PRateRoll: ");
+  // Serial.print(PRateRoll);
+  // Serial.println(" ");
+  // Serial.print("IRateRoll: ");
+  // Serial.print(IRateRoll);
+  // Serial.print(" ");
+  // Serial.print("DRateRoll: ");
+  // Serial.print(DRateRoll);
+  // Serial.print(" ");
   
-//   Serial.println(" ");
+  // Serial.println(" ");
 
 
  
   while (micros() - LoopTimer < (t*1000000));
   {
-     LoopTimer = micros();
+    LoopTimer = micros();
   }
 
 }

@@ -9,10 +9,10 @@ Servo mot1;
 Servo mot2;
 Servo mot3;
 Servo mot4;
-const int mot1_pin = 27;  //13
-const int mot2_pin = 14;  //12
-const int mot3_pin = 12;  //14
-const int mot4_pin = 13;  //27
+const int mot1_pin = 14;  //top right
+const int mot2_pin = 13;  //rear right
+const int mot3_pin = 12;  //rear left
+const int mot4_pin = 27;  //top left
 
 volatile uint32_t current_time;
 volatile uint32_t last_channel_1 = 0;
@@ -558,14 +558,14 @@ void loop(void) {
 // Serial.print(" -- ");
 
 //Angles from MPU
-  Serial.println("Angles:");
-  Serial.print("AngleRoll: ");
-  Serial.print(AngleRoll);
-  Serial.print(" | ");
-  Serial.print("AnglePitch: ");
-  Serial.print(AnglePitch);
+  // Serial.println("Angles:");
+  // Serial.print("AngleRoll: ");
+  // Serial.print(AngleRoll);
+  // Serial.print(" | ");
+  // Serial.print("AnglePitch: ");
+  // Serial.print(AnglePitch);
 
-  Serial.println(" ");
+  // Serial.println(" ");
 
 
  
