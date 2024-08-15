@@ -1,3 +1,9 @@
+/*
+    STAY AWAY FROM DRONE WHEN RUNNING THIS PROGRAM
+    THIS PROGRAM IS DANGEROUS TO RUN WITH PROPS INDOORS
+*/
+
+
 // #include <ESP32Servo.h>
 
 // // Create Servo objects for each ESC
@@ -127,7 +133,7 @@
 
 //   //TOGGLE KILL SWITCH
 //   if(ReceiverValue[4] < 1500) {
-//       //ESC IS BEING DISCONNECTED AND SET TO UNUSED PIN 17
+//       //Ariv: ESC IS BEING DISCONNECTED AND SET TO UNUSED PIN 17
 //       esc1.attach(17);
 //       esc2.attach(17);
 //       esc3.attach(17);
@@ -171,22 +177,19 @@
 //   armESC(esc3);
 //   armESC(esc4);
 //   Serial.println("Setup completed");
-// }
 
-// void loop() {
 
-//   channelInterruptHandler();  //redundancy
-
-//   //1000us = 0% duty cycle, 2000us = 100% duty cycle 
+// //1000us = 0% duty cycle, 2000us = 100% duty cycle 
 //   //gradual incline and decline
 //   int throttle = 1000;
+
 //   while(throttle < 2000) {
 //     esc1.writeMicroseconds(throttle);
 //     esc2.writeMicroseconds(throttle);
 //     esc3.writeMicroseconds(throttle);
 //     esc4.writeMicroseconds(throttle);
 //     throttle++;
-//     delay(20);
+//     delay(10);
 //   }
 //   while(throttle > 0) {
 //     esc1.writeMicroseconds(throttle);
@@ -194,6 +197,12 @@
 //     esc3.writeMicroseconds(throttle);
 //     esc4.writeMicroseconds(throttle);
 //     throttle--;
-//     delay(20);
+//     delay(10);
 //   }
+//     Serial.println("Flight completed");
+// }
+
+// void loop() {
+
+//   channelInterruptHandler();  //redundancy
 // }

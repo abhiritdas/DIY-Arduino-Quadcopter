@@ -1,3 +1,10 @@
+/*
+  Last Updated: 08/09/2024
+  This file pairs with WiFiHandler.cpp
+  OPEN "192.168.1.100" IN BROWSER TO OPEN PID TUNING WEBPAGE
+  SOLID BLUE LIGHT INDICATES DRONE IS READY
+*/
+
 #include <Wire.h>
 #include <ESP32Servo.h>
 
@@ -27,15 +34,15 @@ volatile uint32_t timer_3;
 volatile uint32_t timer_4;
 volatile uint32_t timer_5;
 volatile uint32_t timer_6;
-volatile int ReceiverValue[6]; // Increase the array size to 6 for Channel 1 to Channel 6
-const int channel_1_pin = 34;
-const int channel_2_pin = 35;
-const int channel_3_pin = 32;
-const int channel_4_pin = 33;
-const int channel_5_pin = 25;
-const int channel_6_pin = 26;
+volatile int ReceiverValue[6]; // Array for PPM values
+const int channel_1_pin = 4; //34
+const int channel_2_pin = 16; //35
+const int channel_3_pin = 17; //32
+const int channel_4_pin = 5; //33
+const int channel_5_pin = 18; //25
+const int channel_6_pin = 19; //26
 
-// float voltage;
+//float battery_voltage;
 
 float DesiredRateRoll, DesiredRatePitch, DesiredRateYaw;
 float ErrorRateRoll, ErrorRatePitch, ErrorRateYaw;
@@ -43,26 +50,6 @@ float InputRoll, InputThrottle, InputPitch, InputYaw;
 float PrevErrorRateRoll, PrevErrorRatePitch, PrevErrorRateYaw;
 float PrevItermRateRoll, PrevItermRatePitch, PrevItermRateYaw;
 float PIDReturn[] = {0, 0, 0};
-
-// float AccX, AccY, AccZ;
-// float AngleRoll, AnglePitch;
-// float KalmanAngleRoll=0, KalmanUncertaintyAngleRoll=2*2;
-// float KalmanAnglePitch=0, KalmanUncertaintyAnglePitch=2*2;
-// float Kalman1DOutput[]={0,0};
-
-
-//TUNE THESE PID VALUES FOR FLIGHT
-float PRateRoll = 0.75; //For outdoor flights, keep this gain to 0.75 and for indoor flights keep the gain to be 0.6
-float IRateRoll = 0.012;
-float DRateRoll = 0.0085;
-
-float PRatePitch = PRateRoll;
-float IRatePitch = IRateRoll;
-float DRatePitch = DRateRoll;
-
-float PRateYaw = 4.2;
-float IRateYaw = 2.8;
-float DRateYaw = 0;
 
 uint32_t LoopTimer;
 float t=0.006;      //time cycle
@@ -80,6 +67,21 @@ volatile float PrevItermAngleRoll, PrevItermAnglePitch;
 float PAngleRoll=2; float PAnglePitch=PAngleRoll;
 float IAngleRoll=0; float IAnglePitch=IAngleRoll;
 float DAngleRoll=0; float DAnglePitch=DAngleRoll;
+
+//TUNE THESE PID VALUES FOR FLIGHT
+float PRateRoll = 0.75; //For outdoor flights, keep this gain to 0.75 and for indoor flights keep the gain to be 0.6
+float IRateRoll = 0.012;
+float DRateRoll = 0.0085;
+
+float PRatePitch = PRateRoll;
+float IRatePitch = IRateRoll;
+float DRatePitch = DRateRoll;
+
+float PRateYaw = 4.2;
+float IRateYaw = 2.8;
+float DRateYaw = 0;
+
+//KALMAN FILTER STATE ESTIMATION
 void kalman_1d(float KalmanState, float KalmanUncertainty, float KalmanInput, float KalmanMeasurement) {
   KalmanState=KalmanState + (t*KalmanInput);
   KalmanUncertainty=KalmanUncertainty + (t*t*4*4); //here 4 is the vairnece of IMU i.e 4 deg/s
@@ -92,8 +94,7 @@ void kalman_1d(float KalmanState, float KalmanUncertainty, float KalmanInput, fl
 
 volatile float MotorInput1, MotorInput2, MotorInput3, MotorInput4;
 
-void channelInterruptHandler()
-{
+void channelInterruptHandler() {
   current_time = micros();
   // Channel 1
   if (digitalRead(channel_1_pin))
@@ -259,7 +260,7 @@ void pid_equation(float Error, float P, float I, float D, float PrevError, float
   }
   else if (Iterm < -400)
   {
-  Iterm = -400;
+    Iterm = -400;
   }
   float Dterm = D *( (Error - PrevError)/t);
   float PIDOutput = Pterm + Iterm + Dterm;
@@ -284,10 +285,9 @@ void reset_pid(void)
   PrevItermAngleRoll=0; PrevItermAnglePitch=0;
 }
 
-
 void setup(void) {
 
-  //initiate Serial and LED
+  //initiate Serial and LED 
   Serial.begin(115200);
   pinMode(2, OUTPUT);
 
@@ -324,7 +324,7 @@ void setup(void) {
   mot2.attach(mot2_pin,1000,2000);
   mot3.attach(mot3_pin,1000,2000);
   mot4.attach(mot4_pin,1000,2000);
-  //to stop esc from beeping
+  //to stop escs from beeping
   mot1.write(0);
   mot2.write(0);
   mot3.write(0);
@@ -332,17 +332,14 @@ void setup(void) {
 
   digitalWrite(2, LOW);
   delay(1000);
-  digitalWrite(2, HIGH);
-  delay(1000);
-
 
   for (RateCalibrationNumber = 0; RateCalibrationNumber < 3000; RateCalibrationNumber++)
   {
-      gyro_signals();
-      RateCalibrationRoll += RateRoll;
-      RateCalibrationPitch += RatePitch;
-      RateCalibrationYaw += RateYaw;
-      delay(1);
+    gyro_signals();
+    RateCalibrationRoll += RateRoll;
+    RateCalibrationPitch += RatePitch;
+    RateCalibrationYaw += RateYaw;
+    delay(1);
   }
   RateCalibrationRoll /= 3000;
   RateCalibrationPitch /= 3000;
@@ -361,11 +358,9 @@ void setup(void) {
 }
 
 
-
 void loop(void) {
-
   //Abhirit:
-  //check for armswitch enable (channel 5)
+  //check for kill switch enable (channel 5)
   while(ReceiverValue[4] > 1500) {
     mot1.write(map(0, 1000, 2000, 0, 180));
     mot2.write(map(0, 1000, 2000, 0, 180));
@@ -377,8 +372,6 @@ void loop(void) {
   RateRoll -= RateCalibrationRoll;
   RatePitch -= RateCalibrationPitch;
   RateYaw -= RateCalibrationYaw;
-
-  //add any MPU6050 orientation code here
 
   kalman_1d(KalmanAngleRoll, KalmanUncertaintyAngleRoll, RateRoll, AngleRoll);
   KalmanAngleRoll=Kalman1DOutput[0]; KalmanUncertaintyAngleRoll=Kalman1DOutput[1];
@@ -430,12 +423,11 @@ void loop(void) {
     InputThrottle = 1800;
   }
 
-  
+  //MOTOR MIXING ALGORITHM
   MotorInput1 =  (InputThrottle - InputRoll - InputPitch - InputYaw); // front right - counter clockwise
   MotorInput2 =  (InputThrottle - InputRoll + InputPitch + InputYaw); // rear right - clockwise
   MotorInput3 =  (InputThrottle + InputRoll + InputPitch - InputYaw); // rear left  - counter clockwise
   MotorInput4 =  (InputThrottle + InputRoll - InputPitch + InputYaw); // front left - clockwise
-
 
   if (MotorInput1 > 2000)
   {
@@ -486,92 +478,55 @@ void loop(void) {
     reset_pid();
   }
 
+  //scale writemicrosecond values to 0-180 angle values, then write
   mot1.write(map(MotorInput1, 1000, 2000, 0, 180));
   mot2.write(map(MotorInput2, 1000, 2000, 0, 180));
   mot3.write(map(MotorInput3, 1000, 2000, 0, 180));
   mot4.write(map(MotorInput4, 1000, 2000, 0, 180));
 
-// voltage= (analogRead(36)/4096)*12.46*(35.9/36);
-// if(voltage<11.1)
-// {
+  /*
+    BATTERY LIFE
+    ADC1 input from voltage divider
+    R1=47k, R2=10k
+  */
+  // battery_voltage = analogRead(15) * (2.1/4095.0) *(10.0/57.0);
+  // Serial.print("Battery Voltage: ");
+  // Serial.println(battery_voltage);
 
-// }
+/*
+====================================================================================
+*/
 
-//Reciever signals
-  // Serial.print("ReceiverValue[0]: ");
-  // Serial.print(ReceiverValue[0]);
-  // Serial.println(" - ");
-  // Serial.print("ReceiverValue[1]: ");
-  // Serial.print(ReceiverValue[1]);
-  // Serial.print(" - ");
-  // Serial.print("ReceiverValue[2]: ");
-  // Serial.print(ReceiverValue[2]);
-  // Serial.print(" - ");
-  // Serial.print("ReceiverValue[3]: ");
-  // Serial.print(ReceiverValue[3]);
-  // Serial.print(" --- ");
-  // Serial.print("ReceiverValue[4]: ");
-  // Serial.print(ReceiverValue[4]);
-  // Serial.print(" - ");
-  // Serial.print("ReceiverValue[5]: ");
-  // Serial.print(ReceiverValue[5]);
-  // Serial.print(" - ");
-
-//Motor PWMs in us
-  // Serial.print("MotVals-");
+  //Motor PWMs in us
   // Serial.print(MotorInput1);
-  // Serial.print("  ");
+  // Serial.print(" ");
   // Serial.print(MotorInput2);
-  // Serial.print("  ");
+  // Serial.print(" ");
   // Serial.print(MotorInput3);
-  // Serial.print("  ");
-  // Serial.print(MotorInput4);
-  // Serial.print(" -- ");
+  // Serial.print(" ");
+  // Serial.println(MotorInput4);  // Use println() to end the line
 
-//Reciever translated rates
-//   Serial.print(DesiredRateRoll);
-//   Serial.print("  ");
-//   Serial.print(DesiredRatePitch);
-//   Serial.print("  ");
-//   Serial.print(DesiredRateYaw);
-//   Serial.print(" -- ");
+  //FYI the motor mixing algo is wrong
 
-//Gyro Rates
-//   Serial.println(" Gyro rates:");
-//   Serial.print(" Rate Roll ");
-//   Serial.print(RateRoll);
-//   Serial.print(" | ");
-//   Serial.print(" Rate Pitch ");
-//   Serial.print(RatePitch);
-//   Serial.print(" | ");
-//   Serial.print(" Rate Yaw ");
-//   Serial.print(RateYaw);
-//   Serial.println("");
+    //Display important angle values in feedback loop 
+  Serial.print("DesiredAngleRoll:");
+  Serial.print(DesiredAngleRoll);
+  Serial.print(",");
+  Serial.print("KalmanAngleRoll:");
+  Serial.print(KalmanAngleRoll);
+  Serial.print(",");
+  Serial.print("DesiredAnglePitch:");
+  Serial.print(DesiredAnglePitch);
+  Serial.print(",");
+  Serial.print("KalmanAnglePitch:");
+  Serial.println(KalmanAnglePitch);  // Use println() to end the line
 
-//PID outputs
-// Serial.print("PID O/P ");
-// Serial.print(InputPitch);
-// Serial.print("  ");
-// Serial.print(InputRoll);
-// Serial.print("  ");
-// Serial.print(InputYaw);
-// Serial.print(" -- ");
-
-//Angles from MPU
-  // Serial.println("Angles:");
-  // Serial.print("AngleRoll: ");
-  // Serial.print(AngleRoll);
-  // Serial.print(" | ");
-  // Serial.print("AnglePitch: ");
-  // Serial.print(AnglePitch);
-
-  // Serial.println(" ");
 
 
  
   while (micros() - LoopTimer < (t*1000000));
   {
-     LoopTimer = micros();
+    LoopTimer = micros();
   }
 
 }
