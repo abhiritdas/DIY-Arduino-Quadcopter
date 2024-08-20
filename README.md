@@ -8,5 +8,8 @@ The following is a list of important hardware components used in this project: M
 There are certain files in the src folder that depend on each other and require unrelated files to be commented out: 
 1) main.cpp
 2) pid_tuning.cpp, WiFiHandler.cpp, WiFiHandler.h
+
+Testing Files:
 3) imu_test.cpp
 4) motor_test.cpp
+5) esc_calibrate.cpp
