@@ -36,12 +36,12 @@ volatile uint32_t timer_4;
 volatile uint32_t timer_5;
 volatile uint32_t timer_6;
 volatile int ReceiverValue[6]; // Array for PPM values
-const int channel_1_pin = 4; //34
-const int channel_2_pin = 16; //35
-const int channel_3_pin = 17; //32
-const int channel_4_pin = 5; //33
-const int channel_5_pin = 18; //25
-const int channel_6_pin = 19; //26
+const int channel_1_pin = 4; 
+const int channel_2_pin = 16;
+const int channel_3_pin = 17;
+const int channel_4_pin = 5; 
+const int channel_5_pin = 18;
+const int channel_6_pin = 19;
 
 //float battery_voltage;
 
@@ -82,7 +82,8 @@ volatile float Kalman1DOutput[]={0,0};
 
 
 //KALMAN FILTER STATE ESTIMATION
-void kalman_1d(float KalmanState, float KalmanUncertainty, float KalmanInput, float KalmanMeasurement) {
+void kalman_1d(float KalmanState, float KalmanUncertainty, float KalmanInput, float KalmanMeasurement, float bias) {
+  KalmanInput += bias; 
   KalmanState=KalmanState + (t*KalmanInput);
   KalmanUncertainty=KalmanUncertainty + (t*t*4*4); //here 4 is the vairnece of IMU i.e 4 deg/s
   float KalmanGain=KalmanUncertainty * 1/(1*KalmanUncertainty + 3 * 3); //std deviation of error is 3 deg
@@ -375,11 +376,11 @@ void loop(void) {
   RatePitch -= RateCalibrationPitch;
   RateYaw -= RateCalibrationYaw;
 
-  kalman_1d(KalmanAngleRoll, KalmanUncertaintyAngleRoll, RateRoll, AngleRoll);
+  kalman_1d(KalmanAngleRoll, KalmanUncertaintyAngleRoll, RateRoll, AngleRoll, 2.2);   //bias offset
   KalmanAngleRoll=Kalman1DOutput[0]; KalmanUncertaintyAngleRoll=Kalman1DOutput[1];
-  kalman_1d(KalmanAnglePitch, KalmanUncertaintyAnglePitch, RatePitch, AnglePitch);
+  kalman_1d(KalmanAnglePitch, KalmanUncertaintyAnglePitch, RatePitch, AnglePitch, 0); //bias offset
   KalmanAnglePitch=Kalman1DOutput[0]; KalmanUncertaintyAnglePitch=Kalman1DOutput[1];
-  
+
   channelInterruptHandler();
   neutralPositionAdjustment();
 
@@ -406,19 +407,19 @@ void loop(void) {
   ErrorRateYaw=DesiredRateYaw-RateYaw;
 
   pid_equation(ErrorRateRoll, PRateRoll, IRateRoll, DRateRoll, PrevErrorRateRoll, PrevItermRateRoll);
-       InputRoll=PIDReturn[0];
-       PrevErrorRateRoll=PIDReturn[1]; 
-       PrevItermRateRoll=PIDReturn[2];
+  InputRoll=PIDReturn[0];
+  PrevErrorRateRoll=PIDReturn[1]; 
+  PrevItermRateRoll=PIDReturn[2];
 
   pid_equation(ErrorRatePitch, PRatePitch,IRatePitch, DRatePitch, PrevErrorRatePitch, PrevItermRatePitch);
-       InputPitch=PIDReturn[0]; 
-       PrevErrorRatePitch=PIDReturn[1]; 
-       PrevItermRatePitch=PIDReturn[2];
+  InputPitch=PIDReturn[0]; 
+  PrevErrorRatePitch=PIDReturn[1]; 
+  PrevItermRatePitch=PIDReturn[2];
 
   pid_equation(ErrorRateYaw, PRateYaw,IRateYaw, DRateYaw, PrevErrorRateYaw, PrevItermRateYaw);
-       InputYaw=PIDReturn[0]; 
-       PrevErrorRateYaw=PIDReturn[1]; 
-       PrevItermRateYaw=PIDReturn[2];
+  InputYaw=PIDReturn[0]; 
+  PrevErrorRateYaw=PIDReturn[1]; 
+  PrevItermRateYaw=PIDReturn[2];
 
   if (InputThrottle > 1800)
   {

@@ -1,10 +1,3 @@
-/*
-  Last Updated: 08/09/2024
-  This file pairs with WiFiHandler.cpp
-  OPEN "192.168.1.100" IN BROWSER TO OPEN PID TUNING WEBPAGE
-  SOLID BLUE LIGHT INDICATES DRONE IS READY
-*/
-
 #include <Wire.h>
 #include <ESP32Servo.h>
 
@@ -35,12 +28,12 @@ volatile uint32_t timer_4;
 volatile uint32_t timer_5;
 volatile uint32_t timer_6;
 volatile int ReceiverValue[6]; // Array for PPM values
-const int channel_1_pin = 4; //34
-const int channel_2_pin = 16; //35
-const int channel_3_pin = 17; //32
-const int channel_4_pin = 5; //33
-const int channel_5_pin = 18; //25
-const int channel_6_pin = 19; //26
+const int channel_1_pin = 4;
+const int channel_2_pin = 16;
+const int channel_3_pin = 17;
+const int channel_4_pin = 5; 
+const int channel_5_pin = 18;
+const int channel_6_pin = 19;
 
 //float battery_voltage;
 
@@ -82,7 +75,8 @@ float IRateYaw = 2.8;
 float DRateYaw = 0;
 
 //KALMAN FILTER STATE ESTIMATION
-void kalman_1d(float KalmanState, float KalmanUncertainty, float KalmanInput, float KalmanMeasurement) {
+void kalman_1d(float KalmanState, float KalmanUncertainty, float KalmanInput, float KalmanMeasurement, float bias) {
+  KalmanInput -= bias; 
   KalmanState=KalmanState + (t*KalmanInput);
   KalmanUncertainty=KalmanUncertainty + (t*t*4*4); //here 4 is the vairnece of IMU i.e 4 deg/s
   float KalmanGain=KalmanUncertainty * 1/(1*KalmanUncertainty + 3 * 3); //std deviation of error is 3 deg
@@ -368,14 +362,16 @@ void loop(void) {
     mot4.write(map(0, 1000, 2000, 0, 180));
   }
 
+  //MAKE SURE THE IMU IS PARALLEL TO THE FRAME FOR GOOD PERFORMANCE
+
   gyro_signals();
   RateRoll -= RateCalibrationRoll;
   RatePitch -= RateCalibrationPitch;
   RateYaw -= RateCalibrationYaw;
 
-  kalman_1d(KalmanAngleRoll, KalmanUncertaintyAngleRoll, RateRoll, AngleRoll);
+  kalman_1d(KalmanAngleRoll, KalmanUncertaintyAngleRoll, RateRoll, AngleRoll, -1);       //bias offset -1
   KalmanAngleRoll=Kalman1DOutput[0]; KalmanUncertaintyAngleRoll=Kalman1DOutput[1];
-  kalman_1d(KalmanAnglePitch, KalmanUncertaintyAnglePitch, RatePitch, AnglePitch);
+  kalman_1d(KalmanAnglePitch, KalmanUncertaintyAnglePitch, RatePitch, AnglePitch, -1);   //bias offset -1
   KalmanAnglePitch=Kalman1DOutput[0]; KalmanUncertaintyAnglePitch=Kalman1DOutput[1];
   
   channelInterruptHandler();
@@ -498,30 +494,43 @@ void loop(void) {
 */
 
   //Motor PWMs in us
-  // Serial.print(MotorInput1);
-  // Serial.print(" ");
-  // Serial.print(MotorInput2);
-  // Serial.print(" ");
-  // Serial.print(MotorInput3);
-  // Serial.print(" ");
-  // Serial.println(MotorInput4);  // Use println() to end the line
-
-  //FYI the motor mixing algo is wrong
+//   Serial.print("M1:");
+//   Serial.print(MotorInput1);
+//   Serial.print(",");
+//   Serial.print("M2:");
+//   Serial.print(MotorInput2);
+//   Serial.print(",");
+//   Serial.print("M3:");
+//   Serial.print(MotorInput3);
+//   Serial.print(",");
+//   Serial.print("M4:");
+//   Serial.println(MotorInput4);  // Use println() to end the line
 
     //Display important angle values in feedback loop 
-  Serial.print("DesiredAngleRoll:");
-  Serial.print(DesiredAngleRoll);
-  Serial.print(",");
-  Serial.print("KalmanAngleRoll:");
-  Serial.print(KalmanAngleRoll);
-  Serial.print(",");
-  Serial.print("DesiredAnglePitch:");
-  Serial.print(DesiredAnglePitch);
-  Serial.print(",");
-  Serial.print("KalmanAnglePitch:");
-  Serial.println(KalmanAnglePitch);  // Use println() to end the line
+  // Serial.print("DesiredAngleRoll:");
+  // Serial.print(DesiredAngleRoll);
+  // Serial.print(",");
+  // Serial.print("KalmanAngleRoll:");
+  // Serial.print(KalmanAngleRoll);
+  // Serial.print(",");
+  // Serial.print("DesiredAnglePitch:");
+  // Serial.print(DesiredAnglePitch);
+  // Serial.print(",");
+  // Serial.print("KalmanAnglePitch:");
+  // Serial.println(KalmanAnglePitch);  // Use println() to end the line
 
-
+    //Display motor output parameters
+  // Serial.print("InputThrottle:");
+  // Serial.print(InputThrottle);
+  // Serial.print(",");
+  // Serial.print("InputRoll:");
+  // Serial.print(InputRoll);
+  // Serial.print(",");
+  // Serial.print("InputPitch:");
+  // Serial.print(InputPitch);
+  // Serial.print(",");
+  // Serial.print("InputYaw:");
+  // Serial.println(InputYaw);  // Use println() to end the line
 
  
   while (micros() - LoopTimer < (t*1000000));
